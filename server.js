@@ -8,7 +8,10 @@ var Hapi        = require('hapi'),
   Mongoose      = require('mongoose'),
   mongoURI      = process.env.MONGOLAB_URI ? process.env.MONGOLAB_URI : 'mongodb://localhost/instadvice',
   UpdateRecord  = require('./models/update'),
-  jobs          = kue.createQueue();
+  jobs          = kue.createQueue(),
+  express       = require('express'),
+  http          = require('http'),
+  app           = express();
 
 // MongoDB Connection
 Mongoose.connect(mongoURI);
@@ -52,8 +55,15 @@ server.route({
   }
 });
 
-kue.app.listen(3003);
 
+// initialize Kue web interface
+app.use('/kue', kue.app);
+
+http.createServer(app).listen(3003, function(){
+  console.log('Express server listening on port 3000. Point browser to route /kue');
+});
+
+// start server itself
 server.start(function() {
     console.log('Hapi server started @', server.info.uri);
 });
