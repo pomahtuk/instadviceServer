@@ -2,6 +2,7 @@
 logs
 *.log
 server_log.txt
+worker_log.txt
 
 # Runtime data
 pids
