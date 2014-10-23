@@ -11,7 +11,8 @@ var Hapi        = require('hapi'),
   jobs          = kue.createQueue(),
   express       = require('express'),
   http          = require('http'),
-  app           = express();
+  app           = express(),
+  Good          = require('good');
 
 // MongoDB Connection
 Mongoose.connect(mongoURI);
@@ -25,7 +26,7 @@ server.route({
 });
 
 server.route({
-  path: '/subscription/',
+  path: '/subscription',
   method: 'GET',
   handler: function(request, reply) {
     reply(request.query['hub.challenge']);
@@ -33,21 +34,23 @@ server.route({
 });
 
 server.route({
-  path: '/subscription/',
+  path: '/subscription',
   method: 'POST',
   handler: function(request, reply) {
-    var updates = request.query, record;
+    var updates = request.payload, record, update;
 
-    function createQueueJob (dbRecord) {
-      jobs.create('get_image', dbRecord);
+    function createQueueJob (err, dbRecord) {
+      if (err) { 
+        console.log(err);
+      } else {
+        jobs.create('get_image', dbRecord).save();
+      }
     }
 
     if (typeof updates === 'object') {
       for (var i = 0; i < updates.length; i++) {
-
-        console.log(updates[i]);
-
-        record = new UpdateRecord(updates[i]);
+        update = updates[i];
+        record = new UpdateRecord ({'object': 'test'});
         record.save(createQueueJob);
       }
     }
@@ -64,6 +67,13 @@ http.createServer(app).listen(3003, function(){
 });
 
 // start server itself
-server.start(function() {
+server.pack.register(Good, function (err) {
+  if (err) {
+    throw err; // something bad happened loading the plugin
+  }
+
+  server.start(function () {
     console.log('Hapi server started @', server.info.uri);
+  });
 });
+
