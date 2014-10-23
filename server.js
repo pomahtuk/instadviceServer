@@ -22,7 +22,7 @@ routes.setupRoutes(server);
 // initialize Kue web interface
 app.use('/kue', kue.app);
 
-http.createServer(app).listen(3003, function(){
+http.createServer(app).listen(3003, function () {
   console.log('Express server listening on port 3003. Point browser to route /kue');
 });
 
