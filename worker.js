@@ -6,7 +6,7 @@ var kue = require('kue'),
   jobs  = kue.createQueue(),
   https = require('https'),
   Media = require('./models/media'),
-  access_token  = '1';
+  access_token  = '1427599199.0e68eb0.89a973d91ac14effb6a54b4a371916d6';
 
 jobs.process('get_image', function (job, done) {
   var url = 'https://api.instagram.com/v1/tags/' + job.data.object_id + '/media/recent?access_token=' + access_token;
