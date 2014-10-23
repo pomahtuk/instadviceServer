@@ -14,10 +14,10 @@ jobs.process('get_image', function (job, done) {
   https.get(url, function (response) {
     var body = '';
 
-    response.on('data', function(chunk) {
+    response.on('data', function (chunk) {
       body += chunk;
     });
-    response.on('end', function() {
+    response.on('end', function () {
       body = JSON.parse(body);
 
       console.log(body);
@@ -36,11 +36,16 @@ jobs.process('get_image', function (job, done) {
         if (images.length > 0) {
           images.forEach(function (singleImage) {
             console.log(singleImage);
-            // do all staff - e.g - check for uniq!
-            image = new Media(singleImage);
-            image.save(function (err, savedImage) {
-              console.log(savedImage._id);
-              return true;
+            Media.find({ 'id': singleImage.id }, function (err, found) {
+              // may be some error checking?
+              if (found.length === 0) {
+                // assume we don't have equal image
+                image = new Media(singleImage);
+                image.save(function (err, savedImage) {
+                  console.log(savedImage._id);
+                  return true;
+                });
+              }
             });
           });
         }
