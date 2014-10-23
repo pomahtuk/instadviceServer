@@ -37,7 +37,9 @@ jobs.process('get_image', function (job, done) {
           images.forEach(function (singleImage) {
             console.log(singleImage);
             Media.find({ 'id': singleImage.id }, function (err, found) {
-              // may be some error checking?
+              if (err) {
+                console.log('Got error: ' + err.message);
+              }
               if (found.length === 0) {
                 // assume we don't have equal image
                 image = new Media(singleImage);
@@ -54,8 +56,8 @@ jobs.process('get_image', function (job, done) {
       done();
     });
 
-  }).on('error', function (e) {
-    console.log('Got error: ' + e.message);
-    done();
+  }).on('error', function (err) {
+    console.log('Got error: ' + err.message);
+    done(err);
   });
 });
