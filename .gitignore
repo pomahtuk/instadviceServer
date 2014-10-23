@@ -4,6 +4,7 @@ logs
 server_log.txt
 worker_log.txt
 
+.idea
 # Runtime data
 pids
 *.pid
