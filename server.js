@@ -23,7 +23,7 @@ routes.setupRoutes(server);
 app.use('/kue', kue.app);
 
 http.createServer(app).listen(3003, function(){
-  console.log('Express server listening on port 3000. Point browser to route /kue');
+  console.log('Express server listening on port 3003. Point browser to route /kue');
 });
 
 // start server itself
@@ -36,4 +36,3 @@ server.pack.register(Good, function (err) {
     console.log('Hapi server started @', server.info.uri);
   });
 });
-

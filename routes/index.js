@@ -34,14 +34,17 @@ function setupRoutes (server) {
 	      if (err) { 
 	        console.log(err);
 	      } else {
-	        jobs.create('get_image', dbRecord).save();
+	        jobs.create('get_image', dbRecord)
+	        	.attempts(3)
+	        	.backoff( true )
+	        	.save();
 	      }
 	    }
 
 	    if (typeof updates === 'object') {
 	      for (var i = 0; i < updates.length; i++) {
 	        update = updates[i];
-	        record = new UpdateRecord ({'object': 'test'});
+	        record = new UpdateRecord (update);
 	        record.save(createQueueJob);
 	      }
 	    }
