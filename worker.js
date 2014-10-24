@@ -1,12 +1,17 @@
-/* global require, console */
+/* global require, console, process */
 
 'use strict';
 
-var kue = require('kue'),
-  jobs  = kue.createQueue(),
-  https = require('https'),
-  Media = require('./models/media'),
-  access_token  = '1427599199.0e68eb0.89a973d91ac14effb6a54b4a371916d6';
+var kue         = require('kue'),
+  jobs          = kue.createQueue(),
+  https         = require('https'),
+  Mongoose      = require('mongoose'),
+  Media         = require('./models/media'),
+  access_token  = '1427599199.0e68eb0.89a973d91ac14effb6a54b4a371916d6',
+  mongoURI      = process.env.MONGOLAB_URI ? process.env.MONGOLAB_URI : 'mongodb://localhost/instadvice';
+
+// MongoDB Connection
+Mongoose.connect(mongoURI);
 
 jobs.process('get_image', function (job, done) {
   var url = 'https://api.instagram.com/v1/tags/' + job.data.object_id + '/media/recent?access_token=' + access_token;
@@ -19,8 +24,6 @@ jobs.process('get_image', function (job, done) {
     });
     response.on('end', function () {
       body = JSON.parse(body);
-
-      console.log(body);
 
       var images = body.data,
         image;
@@ -35,7 +38,6 @@ jobs.process('get_image', function (job, done) {
 
         if (images.length > 0) {
           images.forEach(function (singleImage) {
-            console.log(singleImage);
             Media.find({ 'id': singleImage.id }, function (err, found) {
               if (err) {
                 console.log('Got error: ' + err.message);
@@ -43,10 +45,7 @@ jobs.process('get_image', function (job, done) {
               if (found.length === 0) {
                 // assume we don't have equal image
                 image = new Media(singleImage);
-                image.save(function (err, savedImage) {
-                  console.log(savedImage._id);
-                  return true;
-                });
+                image.save();
               }
             });
           });
