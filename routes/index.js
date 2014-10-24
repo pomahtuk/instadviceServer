@@ -27,20 +27,27 @@ function setupRoutes(server) {
     path: '/subscription',
     method: 'POST',
     handler: function (request, reply) {
-      var updates = request.payload, update, i;
+      var random = Math.round(Math.random() * 2);
+      // reduce payload
+      if (random === 1) {
+        var updates = request.payload, update, i;
 
-      if (typeof updates === 'object') {
-        for (i = 0; i < updates.length; i++) {
-          update = updates[i];
+        if (typeof updates === 'object') {
+          for (i = 0; i < updates.length; i++) {
+            update = updates[i];
 
-          // left for debugging using logs
-          console.log(update);
-          jobs.create('get_image', update)
-            .attempts(3)
-            .backoff(true)
-            .save();
+            // left for debugging using logs
+            console.log(update);
+            jobs.create('get_image', update)
+              .attempts(3)
+              .backoff(true)
+              .removeOnComplete()
+              .save();
+          }
         }
+
       }
+
       reply('ok');
     }
   });
