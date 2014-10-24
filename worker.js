@@ -22,50 +22,59 @@ if (cluster.isMaster) {
   }
 } else {
   jobs.process('get_image', function (job, done) {
-    var url = 'https://api.instagram.com/v1/tags/' + job.data.object_id + '/media/recent?access_token=' + access_token + '&min_tag_id' + job.data.time * 1000;
 
-    https.get(url, function (response) {
-      var body = '';
+    var random = Math.round(Math.random() * 2.5);
 
-      response.on('data', function (chunk) {
-        body += chunk;
-      });
-      response.on('end', function () {
-        body = JSON.parse(body);
+    if (random === 0) {
 
-        var images = body.data,
-          image;
+      var url = 'https://api.instagram.com/v1/tags/' + job.data.object_id + '/media/recent?access_token=' + access_token + '&min_tag_id' + job.data.time * 1000;
 
-        if (images) {
-          images = images.filter(function (singleImage) {
-            if (singleImage.created_time > job.data.time && singleImage.location) {
-              return true;
-            }
-            return false;
-          });
+      https.get(url, function (response) {
+        var body = '';
 
-          if (images.length > 0) {
-            images.forEach(function (singleImage) {
-              Media.find({ 'id': singleImage.id }, function (err, found) {
-                if (err) {
-                  console.log('Got error: ' + err.message);
-                }
-                if (found.length === 0) {
-                  // assume we don't have equal image
-                  image = new Media(singleImage);
-                  image.save();
-                }
-              });
+        response.on('data', function (chunk) {
+          body += chunk;
+        });
+        response.on('end', function () {
+          body = JSON.parse(body);
+
+          var images = body.data,
+            image;
+
+          if (images) {
+            images = images.filter(function (singleImage) {
+              if (singleImage.created_time > job.data.time && singleImage.location) {
+                return true;
+              }
+              return false;
             });
+
+            if (images.length > 0) {
+              images.forEach(function (singleImage) {
+                Media.find({ 'id': singleImage.id }, function (err, found) {
+                  if (err) {
+                    console.log('Got error: ' + err.message);
+                  }
+                  if (found.length === 0) {
+                    // assume we don't have equal image
+                    image = new Media(singleImage);
+                    image.save();
+                  }
+                });
+              });
+            }
           }
-        }
 
-        done();
+          done();
+        });
+
+      }).on('error', function (err) {
+        console.log('Got error: ' + err.message);
+        done(err);
       });
+    } else {
+      done();
+    }
 
-    }).on('error', function (err) {
-      console.log('Got error: ' + err.message);
-      done(err);
-    });
   });
 }
