@@ -2,9 +2,8 @@
 
 'use strict';
 
-var UpdateRecord  = require('../models/update'),
-  kue             = require('kue'),
-  jobs            = kue.createQueue();
+var kue   = require('kue'),
+  jobs    = kue.createQueue();
 
 function setupRoutes(server) {
 
@@ -28,26 +27,18 @@ function setupRoutes(server) {
     path: '/subscription',
     method: 'POST',
     handler: function (request, reply) {
-      var updates = request.payload, record, update, i;
-
-      function createQueueJob(err, dbRecord) {
-        if (err) {
-          console.log(err);
-        } else {
-          jobs.create('get_image', dbRecord)
-            .attempts(3)
-            .backoff(true)
-            .save();
-        }
-      }
+      var updates = request.payload, update, i;
 
       if (typeof updates === 'object') {
         for (i = 0; i < updates.length; i++) {
           update = updates[i];
+
           // left for debugging using logs
           console.log(update);
-          record = new UpdateRecord(update);
-          record.save(createQueueJob);
+          jobs.create('get_image', update)
+            .attempts(3)
+            .backoff(true)
+            .save();
         }
       }
       reply('ok');
