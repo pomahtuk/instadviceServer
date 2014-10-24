@@ -3,6 +3,7 @@
 'use strict';
 
 var kue   = require('kue'),
+  Media   = require('./models/media'),
   jobs    = kue.createQueue();
 
 function setupRoutes(server) {
@@ -11,7 +12,9 @@ function setupRoutes(server) {
     path: '/',
     method: 'GET',
     handler: function (request, reply) {
-      reply('Hello, world!');
+      Media.count({}, function (err, count) {
+        reply('total images: ' + count);
+      });
     }
   });
 
