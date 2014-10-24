@@ -27,8 +27,8 @@ function setupRoutes(server) {
     path: '/subscription',
     method: 'POST',
     handler: function (request, reply) {
-      var random = Math.round(Math.random() * 10);
-      // reduce payload, process only 1 request per 10 done
+      var random = Math.round(Math.random() * 1000);
+      // reduce payload, process only 1 request per 1000 done
       if (random === 1) {
         var updates = request.payload, update, i;
 

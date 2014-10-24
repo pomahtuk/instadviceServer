@@ -13,10 +13,10 @@ var kue         = require('kue'),
 
 // MongoDB Connection
 Mongoose.connect(mongoURI);
-Mongoose.set('debug', true);
+// Mongoose.set('debug', true);
 
 // forcing 4  workers, just magic number for right now
-var clusterWorkerSize = 1;
+var clusterWorkerSize = 4;
 
 if (cluster.isMaster) {
   for (var i = 0; i < clusterWorkerSize; i++) {
@@ -39,8 +39,6 @@ if (cluster.isMaster) {
         var images = body.data,
           image;
 
-        console.log(images.length);
-
         if (images) {
           images = images.filter(function (singleImage) {
             if (singleImage.location) {
@@ -48,8 +46,6 @@ if (cluster.isMaster) {
             }
             return false;
           });
-
-          console.log(images.length);
 
           if (images.length > 0) {
             images.forEach(function (singleImage) {
@@ -67,6 +63,8 @@ if (cluster.isMaster) {
               });
             });
           }
+        } else {
+          console.log(body);
         }
 
         done();
@@ -79,14 +77,14 @@ if (cluster.isMaster) {
 
   });
 
-  // jobs.on('job complete', function(id,result){
-  //   kue.Job.get(id, function(err, job){
-  //     if (err) return;
-  //     job.remove(function(err){
-  //       if (err) throw err;
-  //       console.log('removed completed job #%d', job.id);
-  //     });
-  //   });
-  // });
+  jobs.on('job complete', function(id,result){
+    kue.Job.get(id, function(err, job){
+      if (err) return;
+      job.remove(function(err){
+        if (err) throw err;
+        console.log('removed completed job #%d', job.id);
+      });
+    });
+  });
 
 }
