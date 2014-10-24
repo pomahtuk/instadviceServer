@@ -40,7 +40,7 @@ if (cluster.isMaster) {
 
         if (images) {
           images = images.filter(function (singleImage) {
-            if (singleImage.created_time > job.data.time && singleImage.location) {
+            if (singleImage.location) {
               return true;
             }
             return false;
