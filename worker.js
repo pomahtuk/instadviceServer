@@ -13,6 +13,7 @@ var kue         = require('kue'),
 
 // MongoDB Connection
 Mongoose.connect(mongoURI);
+Mongoose.set('debug', true);
 
 // forcing 4  workers, just magic number for right now
 var clusterWorkerSize = 4;
@@ -46,6 +47,8 @@ if (cluster.isMaster) {
             return false;
           });
 
+          console.log(images.length);
+
           if (images.length > 0) {
             images.forEach(function (singleImage) {
               Media.find({ 'id': singleImage.id }, function (err, found) {
@@ -55,7 +58,9 @@ if (cluster.isMaster) {
                 if (found.length === 0) {
                   // assume we don't have equal image
                   image = new Media(singleImage);
-                  image.save();
+                  image.save(function (err, savedImage) {
+                    console.log(savedImage.id);
+                  });
                 }
               });
             });
