@@ -6,7 +6,7 @@ var kue = require('kue'),
 jobs.CLEANUP_MAX_FAILED_TIME = 1 * 24 * 60 * 60 * 1000;  // 1 day
 jobs.CLEANUP_MAX_ACTIVE_TIME = 30 * 60 * 1000;  // 30 min
 jobs.CLEANUP_MAX_COMPLETE_TIME = 2 * 60 * 60 * 1000; // 2 hours
-jobs.CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+jobs.CLEANUP_INTERVAL = 1 * 60 * 1000; // 1 minute
 
 
 // this is a simple log action
