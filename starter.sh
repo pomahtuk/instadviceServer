@@ -7,6 +7,6 @@ then
     export NODE_ENV=production
     export PATH=/usr/local/bin:$PATH
     forever start --sourceDir /home/ubuntu/instadviceServer -o /home/ubuntu/instadviceServer/server.log server.js >> /home/ubuntu/instadviceServer/server_log.txt 2>&1
-    forever start --sourceDir /home/ubuntu/instadviceServer -o /home/ubuntu/instadviceServer/worker.log worker.js >> /home/ubuntu/instadviceServer/worker_log.txt 2>&1        
+    forever start --sourceDir /home/ubuntu/instadviceServer -o /home/ubuntu/instadviceServer/worker.log worker.js >> /home/ubuntu/instadviceServer/worker_log.txt 2>&1
 fi
 

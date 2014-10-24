@@ -14,7 +14,7 @@ var kue         = require('kue'),
 // MongoDB Connection
 Mongoose.connect(mongoURI);
 
-var clusterWorkerSize = require('os').cpus().length * 2;
+var clusterWorkerSize = 4;
 
 if (cluster.isMaster) {
   for (var i = 0; i < clusterWorkerSize; i++) {
