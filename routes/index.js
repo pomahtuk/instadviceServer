@@ -27,8 +27,8 @@ function setupRoutes(server) {
     path: '/subscription',
     method: 'POST',
     handler: function (request, reply) {
-      var random = Math.round(Math.random() * 2);
-      // reduce payload
+      var random = Math.round(Math.random() * 10);
+      // reduce payload, process only 1 request per 10 done
       if (random === 1) {
         var updates = request.payload, update, i;
 
@@ -36,12 +36,9 @@ function setupRoutes(server) {
           for (i = 0; i < updates.length; i++) {
             update = updates[i];
 
-            // left for debugging using logs
-            console.log(update);
             jobs.create('get_image', update)
               .attempts(3)
               .backoff(true)
-              .removeOnComplete()
               .save();
           }
         }
