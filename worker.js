@@ -25,7 +25,7 @@ if (cluster.isMaster) {
 
     var random = Math.round(Math.random() * 2.5);
 
-    if (random === 0) {
+    if (random === 1) {
 
       var url = 'https://api.instagram.com/v1/tags/' + job.data.object_id + '/media/recent?access_token=' + access_token + '&min_tag_id' + job.data.time * 1000;
 
