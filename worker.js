@@ -9,14 +9,14 @@ var kue         = require('kue'),
   Media         = require('./models/media'),
   access_token  = '1427599199.0e68eb0.89a973d91ac14effb6a54b4a371916d6',
   cluster       = require('cluster'),
-  mongoURI      = process.env.MONGOLAB_URI ? process.env.MONGOLAB_URI : 'mongodb://localhost/instadvice';
+  mongoURI      = 'mongodb://localhost/instadvice';
 
 // MongoDB Connection
 Mongoose.connect(mongoURI);
 Mongoose.set('debug', true);
 
 // forcing 4  workers, just magic number for right now
-var clusterWorkerSize = 4;
+var clusterWorkerSize = 1;
 
 if (cluster.isMaster) {
   for (var i = 0; i < clusterWorkerSize; i++) {
@@ -38,6 +38,8 @@ if (cluster.isMaster) {
 
         var images = body.data,
           image;
+
+        console.log(images.length);
 
         if (images) {
           images = images.filter(function (singleImage) {
