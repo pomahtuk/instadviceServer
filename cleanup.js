@@ -1,96 +1,94 @@
-var kue = require('kue'),
-  jobs = kue.createQueue(),
-  util = require('util'),
-  noop = function() {};
-
-jobs.CLEANUP_MAX_FAILED_TIME = 1 * 24 * 60 * 60 * 1000;  // 1 day
-jobs.CLEANUP_MAX_ACTIVE_TIME = 30 * 60 * 1000;  // 30 min
-jobs.CLEANUP_MAX_COMPLETE_TIME = 2 * 60 * 60 * 1000; // 2 hours
-jobs.CLEANUP_INTERVAL = 1 * 60 * 1000; // 1 minute
+var _ = require('underscore'),
+        kue = require('kue');
 
 
-// this is a simple log action
-function QueueActionLog(message) {
-  this.message = message || 'QueueActionLog :: got an action for job id(%s)';
+    var jobs = kue.createQueue(),
+        q = new kue, // object so we can access exposed methods in the kue lib
+        // hours = 24,
+        timer = 5 * 60 * 1000; // timer for the setInterval function
 
-  this.apply = function(job) {
-    console.log(util.format(this.message, job.id));
-    return true;
-  };
-}
 
-// remove item action
-function QueueActionRemove(age) {
-  this.age = age;
+    var completedJobs = function(callback) {
+      /**
+       *  completedJobs - uses the kue lib .complete function to get a list of
+       *  all completed job ids, iterates through each id to retrieve the actual
+       *  job object, then pushes the object into an array for the callback.
+       *
+       */
+      q.complete(function(err, ids){
+        var jobs = [],
+            count = 0,
+            total = ids.length;
+        console.log('completedJobs -> ids.length:%s',ids.length);
+        _.each(ids, function(id){
+          kue.Job.get(id, function(err, job){
+            count++;
+            jobs.push(job);
+            if (total === count) {
+              callback(null, jobs);
+              return;
+            }
+          });
+        });
+      });
+    }
 
-  this.apply = function(job) {
-    job.remove(noop);
-    return true;
-  };
-}
+    var removeJobs = function(jobs, callback) {
+      /**
+       *  removeJobs - removes the job from kue by calling the job.remove from the
+       *  job object collected in completedJobs().
+       *
+       */
+      var count = 0,
+          total = jobs.length;
+      console.log('removeJobs -> jobs.length:%s',jobs.length);
+      _.each(jobs, function(job) {
+        job.remove(function(err) {
+          count++;
+          if (total === count) {
+            callback(null, count);
+            return;
+          }
+        });
+      });
+    }
 
-function QueueFilterAge(age) {
-    this.now = new Date().getTime();
-    this.age = age;
+    var dateDiffInDays = function(d1, d2) {
+      /**
+       *  dateDiffInDays - returns the difference between two Date objects in days
+       */
+      var t2 = d2.getTime(),
+          t1 = d1.getTime();
+      return parseInt((t2-t1)/(60*1000));
+    }
 
-    this.test = function(job) {
-        var created = parseInt(job.created_at);
-        var age = this.now - created;
-        return age > this.age;
-    };
- }
+    setInterval(function() {
+      /**
+       *  setInterval - calls completedJobs in a 24-hour interval
+       */
+      completedJobs(function(err, jobs) {
+        // callback to completedJobs
+        console.log('completedJobs -> callback-> jobs.length:%s', jobs.length);
+        var jobsToRemove = [],
+            now = new Date();
+        _.each(jobs, function(job){
+          var then = new Date(parseInt(job.created_at)),
+              diff = dateDiffInDays(then, now),
+              timePastForRemoval = 10; // remove anything older than 10 minutes
+          if (diff >= timePastForRemoval) {
+            jobsToRemove.push(job);
+          }
+        });
+        console.log('completedJobs -> callback -> jobsToRemove.length:%s', jobsToRemove.length);
+        if (jobsToRemove.length > 0) { // if we have jobsToRemove
+          removeJobs(jobsToRemove, function(err, count){
+            // callback to removeJobs
+            console.log('removeJobs -> callback -> jobs removed:%s',count);
+          });
+        } else {
+          console.log('completedJobs -> callback -> no jobs to remove');
+        }
+      });
+    }, timer);
 
-// the queue iterator
-var queueIterator = function(ids, queueFilterChain, queueActionChain) {
-  ids.forEach(function(id, index) {
-    // get the kue job
-    kue.Job.get(id, function(err, job) {
-      if (err || !job) return;
-      var filterIterator = function(filter) { return filter.test(job) };
-      var actionIterator = function(filter) { return filter.apply(job) };
-
-      // apply filter chain
-      if(queueFilterChain.every(filterIterator)) {
-
-        // apply action chain
-        queueActionChain.every(actionIterator);
-      }
-    });
-  });
-};
-
-function performCleanup() {
-  var ki = new kue;
-
-  ki.failed(function(err, ids) {
-    if (!ids) return;
-    queueIterator(
-      ids,
-      [new QueueFilterAge(jobs.CLEANUP_MAX_FAILED_TIME)],
-      [new QueueActionLog('Going to remove job id(%s) for being failed too long'),
-        new QueueActionRemove()]
-    );
-  });
-
-  ki.active(function(err, ids) {
-    if (!ids) return;
-    queueIterator(
-      ids,
-      [new QueueFilterAge(jobs.CLEANUP_MAX_ACTIVE_TIME)],
-      [new QueueActionLog('Going to remove job id(%s) for being active too long'),
-        new QueueActionRemove()]
-    );
-  });
-
-  ki.complete(function(err, ids) {
-    if (!ids) return;
-    queueIterator(
-      ids,
-      [new QueueFilterAge(jobs.CLEANUP_MAX_COMPLETE_TIME)],
-      [new QueueActionLog('Going to remove job id(%s) for being complete too long'),
-        new QueueActionRemove()]
-    );
-  });
-}
-
-setInterval(performCleanup, jobs.CLEANUP_INTERVAL);
+    console.log('Running kue completed job clean-up');
